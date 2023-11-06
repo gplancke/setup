@@ -2,14 +2,25 @@
 
 HERE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-function read_pwd {
-	stty -echo
-	printf "Password: "
-	read PASSWORD
-	stty echo
-	printf "\n"
+#############################################
+# This function asks for a password if none
+# is already provided
+#############################################
 
-	echo $PASSWORD
+function read_pwd {
+	maybePwd="$1"
+
+	if [ -n "$maybePwd" ]; then
+		echo "$maybePwd"
+	else
+		stty -echo
+		printf "Password: "
+		read PASSWORD
+		stty echo
+		printf "\n"
+
+		echo $PASSWORD
+	fi
 }
 
 #############################################
@@ -202,13 +213,9 @@ function finishing_up {
 
 function dotfiles {
   local op=${1:-link}
-	local pwd="$2"
+	local pwd=$(read_pwd "${2}")
 
-	if [ -z "$pwd" ]; then
-		pwd=$(read_pwd)
-	fi
-
-	local DOTFILES_URL="git@github.com:gplancke/dotdot.git"
+	local DOTFILES_URL="git@github.com:gplancke/dotfiles.git"
 	local DOTFILES_CLONE_DIR="$HOME/.mydotfiles"
 	local DOTFILES_SCRIPT_URL="https://raw.githubusercontent.com/gplancke/dotdot/main/dot.sh"
 
@@ -228,11 +235,7 @@ function dotfiles {
 
 function install_terminal() {
   local distro="$1"
-	local pwd="$2"
-
-	if [ -z "$pwd" ]; then
-		pwd=$(read_pwd)
-	fi
+	local pwd=$(read_pwd "${2}")
 
   # On Mac we must disable tls check for git temporarily
   hash git 2>/dev/null && git config --global http.sslVerify false
@@ -383,13 +386,26 @@ function install_gui() {
 #############################################
 # This first installs the terminal environment
 # And conditionally installs the GUI environment
+# It also attempts to capture the password needed
+# To decrypt the secrets during dotfiles link phase
+#
+# We might want to revisit this
+# As it is not very clean to pass down the password
+# all the way down to the vault function
+# buried in another script fetched from github
+#
+# We do this instead of asking for a password
+# directly in the vault function in order for the user
+# not to have to wait for the vault function to be called
+# which can happen after a long time
 #############################################
 
 function install() {
 	local distro="$(detect_distro)"
 	local opts="$1"
+	local pwd=$(read_pwd)
 
-	install_terminal $distro
+	install_terminal $distro $pwd
 
 	if [ ${opts} = "-gui" ] ; then
 		install_gui $distro
@@ -401,8 +417,8 @@ function printHelp {
   echo ""
   echo "Options for terminal env setup"
   echo ""
-  echo "  dot: Call subscript to manage dotfiles"
-  echo "  install: Install the environment"
+  echo "  dot link|save|register: Call subscript to manage dotfiles"
+  echo "  install [-gui]: Install the environment"
   echo ""
   echo "------"
   echo ""
