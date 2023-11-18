@@ -223,7 +223,9 @@ function dotfiles {
 
 	[ ! -d "$DOTFILES_CLONE_DIR" ] && git clone $DOTFILES_URL $DOTFILES_CLONE_DIR
 	[ ! -f "$HOME/.dotdot" ] && echo "$DOTFILES_CLONE_DIR" > "$HOME/.dotdot"
-	[ ! -f "$HOME/.local/dot.sh" ] && curl -sSL $DOTFILES_SCRIPT_URL > "$HOME/.local/dot.sh"
+	[ ! -f "$HOME/.local/bin/dot.sh" ] && \
+		curl -sSL $DOTFILES_SCRIPT_URL > "$HOME/.local/bin/dot.sh" \
+		chmod +x "$HOME/.local/bin/dot.sh"
 
   "$HOME"/.local/dot.sh "$op" "$pwd"
 }
