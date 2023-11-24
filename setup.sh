@@ -19,7 +19,7 @@ function read_pwd {
 		stty echo
 		printf "\n"
 
-		echo $PASSWORD
+		echo $(echo $PASSWORD | tr ' ' '_')
 	fi
 }
 
